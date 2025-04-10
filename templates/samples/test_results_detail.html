@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Results Detail - KEBS MIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow">
+        <div class="card-body">
+            {% if test_result %}
+                <div class="row mb-4">
+                    <div class="col">
+                        <h2 class="card-title"><i class="bi bi-clipboard-check"></i> Test Results Detail</h2>
+                        <p class="text-muted">Sample #{{ sample.sample_id }} - Batch {{ sample.batch_number }}</p>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'kebs:sample_detail' sample.sample_id %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Sample
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Basic Test Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-4">Test Date:</dt>
+                                    <dd class="col-sm-8">{{ test_result.test_date|date:"M d, Y" }}</dd>
+                                    
+                                    <dt class="col-sm-4">Conducted By:</dt>
+                                    <dd class="col-sm-8">
+                                        {% if test_result.conducted_by %}
+                                            {{ test_result.conducted_by.get_full_name|default:test_result.conducted_by.username }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Compliance:</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge {% if test_result.compliance_status %}badge-completed{% else %}badge-non-compliant{% endif %}">
+                                            {% if test_result.compliance_status %}Compliant{% else %}Non-Compliant{% endif %}
+                                        </span>
+                                    </dd>
+                                    
+                                    <dt class="col-sm-4">Expiry Date:</dt>
+                                    <dd class="col-sm-8">{{ test_result.expiry_date|date:"M d, Y" }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-info h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="card-title mb-0">Quality Analysis</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ test_result.quality_analysis|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if detail %}
+                    <div class="card mt-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Detailed Test Parameters</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if detail.parameters %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Value</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for key, value in detail.parameters.items %}
+                                            <tr>
+                                                <td>{{ key }}</td>
+                                                <td>{{ value }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    No detailed parameters available.
+                                </div>
+                            {% endif %}
+
+                            {% if detail.additional_notes %}
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">Additional Notes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ detail.additional_notes|linebreaks }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle me-2"></i> No test result available for this sample.
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'kebs:sample_list' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left"></i> Back to Samples
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

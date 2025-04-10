@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate Label - Sample Tracking System{% endblock %}
+{% block page_title %}Generate Label{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Generate Label</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-tag"></i> Sample Label Generator</h5>
+        
+        <!-- Search Form -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-8">
+            <input type="text" id="searchInput" class="form-control form-control-lg" 
+                   placeholder="Enter Sample ID or Batch Number">
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary btn-lg w-100" id="searchButton">
+              <i class="bi bi-search"></i> Search Sample
+            </button>
+          </div>
+        </div>
+
+        <!-- Message Display Area -->
+        <div id="messageContainer" class="mb-4"></div>
+        
+        <!-- Label Preview Section -->
+        <div id="labelSection" class="d-none">
+          <div class="card border-success">
+            <div class="card-header bg-success text-white">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-file-earmark-pdf"></i> Generated Label
+                <span id="certNumber" class="badge bg-light text-dark ms-2"></span>
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <div id="labelInfo" class="mb-4">
+                    <div class="row g-3">
+                      <div class="col-6">
+                        <label class="form-label">Sample ID:</label>
+                        <div class="fw-bold" id="labelSampleId">-</div>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label">Batch Number:</label>
+                        <div class="fw-bold" id="labelBatchNumber">-</div>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label">Expiry Date:</label>
+                        <div class="fw-bold" id="labelExpiryDate">-</div>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label">Certification No:</label>
+                        <div class="fw-bold" id="labelCertification">-</div>
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label">Generated Date:</label>
+                        <div class="fw-bold" id="labelGeneratedDate">-</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> This label is valid until the expiry date shown.
+                  </div>
+                </div>
+                <div class="col-md-4 text-center">
+                  <div id="qrCodePreview" class="mb-3"></div>
+                  <div class="d-grid gap-2">
+                    <a id="downloadBtn" class="btn btn-success" target="_blank">
+                      <i class="bi bi-download"></i> Download PDF
+                    </a>
+                    <a href="#" id="viewDetailsBtn" class="btn btn-outline-success">
+                      <i class="bi bi-eye"></i> View Sample Details
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/label-generation.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const labelSection = document.getElementById('labelSection');
+    const messageContainer = document.getElementById('messageContainer');
+    
+    // Function to handle search button click
+    searchButton.addEventListener('click', function() {
+      const batchNumber = searchInput.value.trim();
+      
+      if (!batchNumber) {
+        displayMessage('messageContainer', '<i class="bi bi-exclamation-triangle"></i> Please enter a batch number', 'error');
+        return;
+      }
+      
+      // Show loading message
+      displayMessage('messageContainer', '<i class="bi bi-hourglass-split"></i> Searching for sample...', 'info');
+      
+      // Call the generate label function from label-generation.js
+      generateLabel(batchNumber)
+        .then(result => {
+          // Clear search message
+          messageContainer.innerHTML = '';
+          
+          // Display success message with download link
+          if (result.success) {
+            // Get data from the result
+            const data = result.data || {};
+            
+            // Update UI elements with sample data
+            document.getElementById('labelSampleId').textContent = data.sample_id || '-';
+            document.getElementById('labelBatchNumber').textContent = data.batch_number || batchNumber;
+            document.getElementById('labelExpiryDate').textContent = data.expiry_date || '-';
+            document.getElementById('labelCertification').textContent = data.certification_number || '-';
+            document.getElementById('labelGeneratedDate').textContent = data.generated_date || '-';
+            document.getElementById('certNumber').textContent = data.certification_number || '';
+            
+            // Update download and view buttons
+            document.getElementById('downloadBtn').href = `/sample-mis/labels/${data.label_id}/download/`;
+            document.getElementById('viewDetailsBtn').href = `/sample-mis/sample/${data.sample_id}/`;
+            
+            // Display QR code if available
+            if (data.qr_code_url) {
+              document.getElementById('qrCodePreview').innerHTML = `
+                <img src="${data.qr_code_url}" class="img-fluid border p-2" alt="QR Code">
+              `;
+            }
+            
+            // Show the label section
+            labelSection.classList.remove('d-none');
+          }
+        })
+        .catch(error => {
+          // Display error message
+          displayMessage('messageContainer', '<i class="bi bi-exclamation-triangle"></i> ' + error.message, 'error');
+          
+          // Hide the label section
+          labelSection.classList.add('d-none');
+        });
+    });
+    
+    // Allow search on Enter key press
+    searchInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        searchButton.click();
+      }
+    });
+  });
+</script>
+
+<style>
+  #labelInfo {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+  }
+  
+  #qrCodePreview img {
+    max-width: 200px;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: white;
+  }
+  
+  /* Print Styles */
+  @media print {
+    .btn, .form-control, .card-header {
+      display: none !important;
+    }
+    
+    #labelInfo {
+      border: 1px solid #000;
+    }
+  }
+</style>
+{% endblock %}

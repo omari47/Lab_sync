@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>{% block title %}Authentication - KEBS Sample MIS{% endblock %}</title>
+  <meta content="Kenya Bureau of Standards Sample Management Information System" name="description">
+  <meta content="KEBS, Sample, Testing, Quality Control" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Bootstrap core CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Theme Colors */
+      --primary-color: #4154f1;
+      --secondary-color: #f6f9ff;
+      --accent-color: #717ff5;
+      --success-color: #2ecd71;
+      --info-color: #17a2b8;
+      --warning-color: #ffb848;
+      --danger-color: #e63c3c;
+      --dark-color: #444444;
+      --light-color: #ffffff;
+      
+      /* Spacing */
+      --spacing-xs: 0.25rem;
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 3rem;
+      
+      /* Transitions */
+      --transition-speed: 0.3s;
+    }
+
+    /* Auth pages styling */
+    body {
+      background-color: var(--secondary-color);
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .card {
+      border: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .logo {
+      text-decoration: none;
+    }
+
+    .logo span {
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .logo img {
+      max-height: 40px;
+      margin-right: 10px;
+    }
+
+    .section {
+      min-height: 100vh;
+    }
+
+    .card-title {
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      transition: all var(--transition-speed);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+    }
+
+    .input-group-text {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .credits {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+
+    .alert {
+      border-radius: 8px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .logo img {
+        max-height: 30px;
+      }
+      
+      .logo span {
+        font-size: 1.2rem;
+      }
+      
+      .card {
+        margin: 0 10px;
+      }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  {% block auth_content %}{% endblock %}
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

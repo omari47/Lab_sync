@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Test Result - {{ sample.batch_number }} - KEBS MIS{% endblock %}
+{% block page_title %}Add Test Result for Sample: {{ sample.batch_number }}{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'kebs:sample_list' %}">Samples</a></li>
+<li class="breadcrumb-item"><a href="{% url 'kebs:sample_detail' sample.sample_id %}">{{ sample.batch_number }}</a></li>
+<li class="breadcrumb-item active">Add Test Result</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Add Test Result</h5>
+        
+        <div class="alert alert-info mb-4">
+          <div class="d-flex">
+            <div class="me-3">
+              <i class="bi bi-info-circle-fill fs-4"></i>
+            </div>
+            <div>
+              <h6 class="alert-heading">Important Note</h6>
+              <p class="mb-0">Only test results with "Compliant" status will mark a sample as "Completed". Non-compliant test results will keep the sample in "In Progress" status.</p>
+            </div>
+          </div>
+        </div>
+        
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <div class="detail-label">Batch Number</div>
+                <div>{{ sample.batch_number }}</div>
+              </div>
+              
+              <div class="detail-item">
+                <div class="detail-label">Sample Type</div>
+                <div>{{ sample.get_sample_type_display }}</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="detail-item">
+                <div class="detail-label">Origin</div>
+                <div>{{ sample.sample_origin }}</div>
+              </div>
+              
+              <div class="detail-item">
+                <div class="detail-label">Current Status</div>
+                <div>
+                  {% if sample.testing_status == 'Pending' %}
+                  <span class="badge badge-pending">Pending</span>
+                  {% elif sample.testing_status == 'In Progress' %}
+                  <span class="badge badge-in-progress">In Progress</span>
+                  {% else %}
+                  <span class="badge badge-completed">Completed</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-12">
+              {{ form.quality_analysis|as_crispy_field }}
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              {{ form.compliance_status|as_crispy_field }}
+            </div>
+            <div class="col-md-6">
+              {{ form.expiry_date|as_crispy_field }}
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'kebs:sample_detail' sample.sample_id %}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Cancel
+            </a>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save"></i> Save Test Result
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Testing Guidelines</h5>
+        
+        <div class="mb-3">
+          <h6>Quality Analysis</h6>
+          <p class="text-muted">Provide detailed observations and analysis of the sample quality. Include all relevant measurements, standards compliance checks, and observed characteristics.</p>
+        </div>
+        
+        <div class="mb-3">
+          <h6>Compliance Status</h6>
+          <p class="text-muted">Mark as "Compliant" only if the sample meets all required standards and quality checks. Non-compliant samples should be clearly marked and detailed reasons provided in the quality analysis.</p>
+        </div>
+        
+        <div class="mb-3">
+          <h6>Expiry Date</h6>
+          <p class="text-muted">Set an appropriate expiry date for the certification period. The default is 6 months from today, but this can be adjusted based on the sample type and applicable regulations.</p>
+        </div>
+        
+        <div class="alert alert-warning mt-4">
+          <div class="d-flex">
+            <div class="me-3">
+              <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+            </div>
+            <div>
+              <h6 class="alert-heading">Remember</h6>
+              <p class="mb-0">Only compliant test results will change a sample's status to "Completed". Non-compliant results will leave it as "In Progress" for further testing.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

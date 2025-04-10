@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Test Results - KEBS MIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4"><i class="bi bi-clipboard-check"></i> Test Results for Sample {{ sample.batch_number }}</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Submit Test Results
+                    </button>
+                    <a href="{% url 'kebs:sample_detail' sample.sample_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Sample
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

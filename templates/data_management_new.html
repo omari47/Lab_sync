@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% block title %}Data Management - KEBS MIS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Ensure full compatibility with iOS devices */
+    html, body {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        overscroll-behavior: auto;
+        position: relative;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure table doesn't overflow its container */
+    .table {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    /* Prevent column compression */
+    .table th, .table td {
+        white-space: nowrap;
+        padding: 0.75rem;
+    }
+    
+    /* Maximum width for quality analysis text */
+    .text-truncate {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4"><i class="bi bi-database-gear"></i> Data Management Center</h2>
+            
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs-wrapper mb-3" style="overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; scrollbar-width: none;">
+                <ul class="nav nav-tabs flex-nowrap" id="dataTabs" style="min-width: 100%;">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#samples">
+                            <i class="bi bi-collection me-1"></i>Samples
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#testResults">
+                            <i class="bi bi-clipboard-data me-1"></i>Test Results
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#labels">
+                            <i class="bi bi-tag me-1"></i>Labels
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <style>
+                /* Hide scrollbar but keep functionality */
+                .nav-tabs-wrapper::-webkit-scrollbar {
+                    display: none;
+                }
+                /* Enhance tab appearance */
+                .nav-tabs .nav-link {
+                    padding: 0.75rem 1.25rem;
+                    border-radius: 0.5rem 0.5rem 0 0;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                }
+                .nav-tabs .nav-link.active {
+                    background-color: #fff;
+                    color: var(--bs-accent);
+                    border-bottom-color: #fff;
+                    border-top: 2px solid var(--bs-accent);
+                }
+                /* Animate tab transitions */
+                .tab-pane.fade {
+                    transition: opacity 0.3s ease;
+                }
+            </style>
+
+            <div class="tab-content mt-3">
+                <!-- Samples Tab -->
+                <div id="samples" class="tab-pane fade show active">
+                    <h3>Submitted Samples</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sample ID</th>
+                                    <th>Batch No.</th>
+                                    <th>Type</th>
+                                    <th>Origin</th>
+                                    <th>Status</th>
+                                    <th>Submitted By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sample in samples %}
+                                <tr>
+                                    <td>{{ sample.sample_id }}</td>
+                                    <td>{{ sample.batch_number }}</td>
+                                    <td>{{ sample.get_sample_type_display }}</td>
+                                    <td>{{ sample.sample_origin }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if sample.testing_status == 'Pending' %}badge-pending
+                                            {% elif sample.testing_status == 'In Progress' %}badge-in-progress
+                                            {% else %}badge-completed{% endif %}">
+                                            {{ sample.testing_status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ sample.submitted_by.username|default:"---" }}</td>
+                                    <td>
+                                        <a href="{% url 'kebs:sample_detail' sample.sample_id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No samples found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Test Results Tab -->
+                <div id="testResults" class="tab-pane fade">
+                    <h3>Test Results</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Test ID</th>
+                                    <th>Sample ID</th>
+                                    <th>Quality Analysis</th>
+                                    <th>Compliance</th>
+                                    <th>Test Date</th>
+                                    <th>Conducted By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in test_results %}
+                                <tr>
+                                    <td>{{ result.id }}</td>
+                                    <td>{{ result.sample.sample_id }}</td>
+                                    <td class="text-truncate" style="max-width: 200px;">{{ result.quality_analysis }}</td>
+                                    <td>
+                                        {% if result.compliance_status %}
+                                            <span class="badge badge-completed">Compliant</span>
+                                        {% else %}
+                                            <span class="badge badge-non-compliant">Non-Compliant</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.test_date|date:"Y-m-d" }}</td>
+                                    <td>{{ result.conducted_by.username|default:"---" }}</td>
+                                    <td>
+                                        <a href="{% url 'kebs:sample_detail' result.sample.sample_id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View Sample
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No test results found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Labels Tab -->
+                <div id="labels" class="tab-pane fade">
+                    <h3>Generated Labels</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Label ID</th>
+                                    <th>Sample ID</th>
+                                    <th>Generated Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Certification No.</th>
+                                    <th>Generated By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for label in labels %}
+                                <tr>
+                                    <td>{{ label.id }}</td>
+                                    <td>{{ label.sample.sample_id }}</td>
+                                    <td>{{ label.generated_date|date:"Y-m-d" }}</td>
+                                    <td>{{ label.expiry_date|date:"Y-m-d" }}</td>
+                                    <td>{{ label.certification_number }}</td>
+                                    <td>{{ label.generated_by.username|default:"---" }}</td>
+                                    <td>
+                                        <a href="{% url 'kebs:download_label' label.id %}" class="btn btn-sm btn-success" target="_blank">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No labels found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fix for mobile scrolling issues
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prevent default touchmove behavior only when needed
+        document.addEventListener('touchmove', function(e) {
+            if (document.body.classList.contains('prevent-scroll')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Ensure scrolling works properly
+        const preventBodyScroll = (prevent) => {
+            if (prevent) {
+                document.body.classList.add('prevent-scroll');
+            } else {
+                document.body.classList.remove('prevent-scroll');
+            }
+        };
+        
+        // Reset any overflow restrictions
+        const tables = document.querySelectorAll('.table-responsive');
+        tables.forEach(table => {
+            table.addEventListener('touchstart', function() {
+                const scrollableWidth = table.scrollWidth;
+                const containerWidth = table.clientWidth;
+                
+                // Only prevent parent scrolling if table needs horizontal scrolling
+                if (scrollableWidth > containerWidth) {
+                    preventBodyScroll(true);
+                }
+            });
+            
+            table.addEventListener('touchend', function() {
+                preventBodyScroll(false);
+            });
+        });
+    });
+</script>
+{% endblock %}

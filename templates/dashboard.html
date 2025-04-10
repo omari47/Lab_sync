@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - KEBS MIS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .activities {
+    max-height: 450px;
+    overflow-y: auto;
+  }
+  
+  .activity-item {
+    position: relative;
+    padding-bottom: 20px;
+    border-left: 2px solid #eee;
+    padding-left: 20px;
+    margin-left: 10px;
+  }
+  
+  .activity-item::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #eee;
+  }
+  
+  .activity-item.pending::before {
+    background-color: #ffb848;
+    border-color: #ffb848;
+  }
+  
+  .activity-item.in-progress::before {
+    background-color: #4d79f6;
+    border-color: #4d79f6;
+  }
+  
+  .activity-item.completed::before {
+    background-color: #1ecab8;
+    border-color: #1ecab8;
+  }
+  
+  .activity-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #012970;
+  }
+  
+  .activity-description {
+    font-size: 13px;
+    color: #777;
+  }
+  
+  .activity-time {
+    font-size: 12px;
+    color: #999;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- New Sample Button -->
+<div class="row mb-3">
+  <div class="col-12 d-flex justify-content-end">
+    <a href="{% url 'kebs:create_sample' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> New Sample
+    </a>
+  </div>
+</div>
+
+<!-- Welcome Message -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="ps-3">
+            <h5 class="card-title mb-0">Welcome back, {{ user.get_full_name|default:user.username }}!</h5>
+            <p class="text-muted small">Last login: {{ user.last_login|date:"F d, Y H:i" }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Status Cards -->
+  <div class="col-lg-12">
+    <div class="row">
+      <div class="col-xxl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-card pending">
+              <div class="icon">
+                <i class="bi bi-hourglass"></i>
+              </div>
+              <div>
+                <div class="count">{{ pending_count }}</div>
+                <div class="label">Pending Samples</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xxl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-card in-progress">
+              <div class="icon">
+                <i class="bi bi-clock-history"></i>
+              </div>
+              <div>
+                <div class="count">{{ in_progress_count }}</div>
+                <div class="label">In Progress</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xxl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-card completed">
+              <div class="icon">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <div>
+                <div class="count">{{ completed_count }}</div>
+                <div class="label">Completed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xxl-3 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="stat-card total">
+              <div class="icon">
+                <i class="bi bi-collection"></i>
+              </div>
+              <div>
+                <div class="count">{{ total_count }}</div>
+                <div class="label">Total Samples</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Dashboard Content -->
+  <div class="col-lg-8">
+    <!-- Monthly Samples Chart -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Monthly Sample Submissions</h5>
+        <canvas id="samplesChart" style="max-height: 400px;"></canvas>
+      </div>
+    </div>
+    
+    <!-- Sample Type Breakdown -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Sample Type Distribution</h5>
+        
+        <div class="row">
+          <div class="col-md-8">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Sample Type</th>
+                  <th class="text-end">Count</th>
+                  <th class="text-end">Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for type in sample_types %}
+                <tr>
+                  <td>{{ type.sample_type }}</td>
+                  <td class="text-end">{{ type.count }}</td>
+                  <td class="text-end">
+                    {% if total_count > 0 %}
+                      {{ type.count|floatformat:0 }}%
+                    {% else %}
+                      0%
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center">No sample data available</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-4">
+            <canvas id="sampleTypeChart" style="max-height: 200px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Right Column -->
+  <div class="col-lg-4">
+    <!-- Recent Samples -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Recent Samples</h5>
+        
+        <div class="activities">
+          {% for sample in recent_samples %}
+          <div class="activity-item {% if sample.testing_status == 'Pending' %}pending{% elif sample.testing_status == 'In Progress' %}in-progress{% else %}completed{% endif %}">
+            <div class="activity-label">
+              <a href="{% url 'kebs:sample_detail' sample.sample_id %}">{{ sample.batch_number }}</a>
+            </div>
+            <div class="activity-description">
+              {{ sample.get_sample_type_display }} from {{ sample.sample_origin }}
+            </div>
+            <div class="activity-time">
+              {{ sample.submitted_at|date:"M d, Y" }}
+              
+              {% if sample.testing_status == 'Pending' %}
+              <span class="badge badge-pending">Pending</span>
+              {% elif sample.testing_status == 'In Progress' %}
+              <span class="badge badge-in-progress">In Progress</span>
+              {% else %}
+              <span class="badge badge-completed">Completed</span>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-3">
+            <i class="bi bi-inbox" style="font-size: 2rem; color: #ddd;"></i>
+            <p class="text-muted mt-2">No recent samples</p>
+          </div>
+          {% endfor %}
+        </div>
+        
+        <div class="text-center mt-3">
+          <a href="{% url 'kebs:sample_list' %}" class="btn btn-primary btn-sm">View All Samples</a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Test Results -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Recent Test Results</h5>
+        
+        <div class="activities">
+          {% for result in recent_results %}
+          <div class="activity-item {% if result.compliance_status %}completed{% else %}pending{% endif %}">
+            <div class="activity-label">
+              <a href="{% url 'kebs:sample_detail' result.sample.sample_id %}">{{ result.sample.batch_number }}</a>
+            </div>
+            <div class="activity-description">
+              {% if result.compliance_status %}
+              <span class="badge badge-completed">Compliant</span>
+              {% else %}
+              <span class="badge badge-non-compliant">Non-Compliant</span>
+              {% endif %}
+            </div>
+            <div class="activity-time">
+              {{ result.test_date|date:"M d, Y" }}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-3">
+            <i class="bi bi-clipboard" style="font-size: 2rem; color: #ddd;"></i>
+            <p class="text-muted mt-2">No recent test results</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Monthly samples chart
+    const monthlyData = {{ monthly_data|safe }};
+    const monthlySamplesCtx = document.getElementById('samplesChart').getContext('2d');
+    
+    const monthlySamplesChart = new Chart(monthlySamplesCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+          label: 'Samples',
+          data: monthlyData,
+          fill: true,
+          backgroundColor: 'rgba(1, 41, 112, 0.2)',
+          borderColor: '#012970',
+          tension: 0.2,
+          pointBackgroundColor: '#012970',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              drawBorder: false
+            },
+            ticks: {
+              precision: 0
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+    
+    // Sample type distribution chart
+    {% if sample_types %}
+    const sampleTypeLabels = [
+      {% for type in sample_types %}
+      '{{ type.sample_type }}',
+      {% endfor %}
+    ];
+    
+    const sampleTypeData = [
+      {% for type in sample_types %}
+      {{ type.count }},
+      {% endfor %}
+    ];
+    
+    const sampleTypeColors = [
+      '#4154f1',
+      '#2eca6a', 
+      '#ff771d',
+      '#ffce56'
+    ];
+    
+    const sampleTypeCtx = document.getElementById('sampleTypeChart').getContext('2d');
+    const sampleTypeChart = new Chart(sampleTypeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: sampleTypeLabels,
+        datasets: [{
+          data: sampleTypeData,
+          backgroundColor: sampleTypeColors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '50%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12
+            }
+          }
+        }
+      }
+    });
+    {% endif %}
+  });
+</script>
+{% endblock %}

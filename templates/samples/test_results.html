@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Testing Results - KEBS MIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="card-title mb-4"><i class="bi bi-clipboard-data"></i> Testing Results</h2>
+
+            <!-- Search Bar -->
+            <div class="row mb-4 g-3">
+                <div class="col-md-8">
+                    <input type="text" id="searchInput" class="form-control"
+                           placeholder="Search by Sample ID or Batch Number" value="{{ search_query }}">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" onclick="performSearch()">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </div>
+
+            {% if results %}
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Sample ID</th>
+                            <th>Batch Number</th>
+                            <th>Quality Analysis</th>
+                            <th>Compliance</th>
+                            <th>Test Date</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for result in results %}
+                            <tr>
+                                <!-- Display Sample ID -->
+                                <td>
+                                    {% if result.sample and result.sample.sample_id %}
+                                        {{ result.sample.sample_id }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+
+                                <!-- Display Batch Number -->
+                                <td>
+                                    {% if result.sample and result.sample.batch_number %}
+                                        {{ result.sample.batch_number }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+
+                                <!-- Display Quality Analysis -->
+                                <td class="text-truncate"
+                                    style="max-width: 200px;">{{ result.quality_analysis }}</td>
+
+                                <!-- Display Compliance Status -->
+                                <td>
+                                    <span class="badge {% if result.compliance_status %}badge-completed{% else %}badge-non-compliant{% endif %}">
+                                        {% if result.compliance_status %}Compliant{% else %}Non-Compliant{% endif %}
+                                    </span>
+                                </td>
+
+                                <!-- Display Test Date -->
+                                <td>{{ result.test_date|date:"Y-m-d" }}</td>
+
+                                <!-- View Details Button -->
+                                <td>
+                                    {% if result.sample and result.sample.sample_id %}
+                                        <a href="{% url 'kebs:sample_detail' sample_id=result.sample.sample_id %}"
+                                           class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">No details available</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center py-4">
+                    No test results available.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function performSearch() {
+        const query = document.getElementById('searchInput').value;
+        window.location.href = "{% url 'kebs:test_results' %}?q=" + encodeURIComponent(query);
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+</script>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .text-truncate {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+{% endblock %}

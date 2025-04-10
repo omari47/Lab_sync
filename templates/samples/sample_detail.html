@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sample Detail - {{ sample.batch_number }} - KEBS MIS{% endblock %}
+{% block page_title %}Sample Detail: {{ sample.batch_number }}{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'kebs:sample_list' %}">Samples</a></li>
+<li class="breadcrumb-item active">{{ sample.batch_number }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Sample Details -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Sample Information</h5>
+        
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="detail-item">
+              <div class="detail-label">Batch Number</div>
+              <div>{{ sample.batch_number }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">Sample Type</div>
+              <div>{{ sample.get_sample_type_display }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">Origin</div>
+              <div>{{ sample.sample_origin }}</div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="detail-item">
+              <div class="detail-label">Status</div>
+              <div>
+                {% if sample.testing_status == 'Pending' %}
+                <span class="badge badge-pending">Pending</span>
+                {% elif sample.testing_status == 'In Progress' %}
+                <span class="badge badge-in-progress">In Progress</span>
+                {% else %}
+                <span class="badge badge-completed">Completed</span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">Submission Date</div>
+              <div>{{ sample.submitted_at|date:"M d, Y - h:i A" }}</div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-label">Submitted By</div>
+              <div>{{ sample.submitted_by.get_full_name|default:sample.submitted_by.username }}</div>
+            </div>
+          </div>
+        </div>
+        
+        {% if sample.metadata %}
+        <div class="detail-item">
+          <div class="detail-label">Additional Information</div>
+          <div class="p-3 bg-light rounded">{{ sample.metadata|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'kebs:sample_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+          </a>
+          
+          <div>
+            <a href="{% url 'kebs:add_test_result' sample.sample_id %}" class="btn btn-primary">
+              <i class="bi bi-clipboard-plus"></i> Add Test Result
+            </a>
+            
+            {% if sample.testing_status == 'Completed' %}
+            <button class="btn btn-info generate-label-btn" data-batch="{{ sample.batch_number }}" type="button" data-bs-toggle="modal" data-bs-target="#labelModal">
+              <i class="bi bi-tag"></i> Generate Label
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Test Results -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Test Results</h5>
+        
+        {% if test_results %}
+        <div class="accordion" id="testResultAccordion">
+          {% for result in test_results %}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+              <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                  <span>
+                    Test Result from {{ result.test_date|date:"M d, Y" }}
+                  </span>
+                  <span>
+                    {% if result.compliance_status %}
+                    <span class="badge badge-completed">Compliant</span>
+                    {% else %}
+                    <span class="badge badge-non-compliant">Non-Compliant</span>
+                    {% endif %}
+                  </span>
+                </div>
+              </button>
+            </h2>
+            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#testResultAccordion">
+              <div class="accordion-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="detail-item">
+                      <div class="detail-label">Quality Analysis</div>
+                      <div class="p-3 bg-light rounded">
+                        {{ result.quality_analysis|linebreaks }}
+                      </div>
+                    </div>
+                    
+                    {% if result.detail and result.detail.additional_notes %}
+                    <div class="detail-item mt-3">
+                      <div class="detail-label">Additional Notes</div>
+                      <div class="p-3 bg-light rounded">
+                        {{ result.detail.additional_notes|linebreaks }}
+                      </div>
+                    </div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <div class="detail-item">
+                      <div class="detail-label">Compliance Status</div>
+                      <div>
+                        {% if result.compliance_status %}
+                        <span class="badge badge-completed">Compliant</span>
+                        {% else %}
+                        <span class="badge badge-non-compliant">Non-Compliant</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <div class="detail-label">Test Date</div>
+                      <div>{{ result.test_date|date:"M d, Y - h:i A" }}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <div class="detail-label">Expiry Date</div>
+                      <div>{{ result.expiry_date|date:"M d, Y" }}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                      <div class="detail-label">Conducted By</div>
+                      <div>{{ result.conducted_by.get_full_name|default:result.conducted_by.username }}</div>
+                    </div>
+                    
+                    {% if result.detail and result.detail.parameters %}
+                    <div class="detail-item mt-3">
+                      <div class="detail-label">Test Parameters</div>
+                      <div class="table-responsive">
+                        <table class="table table-sm">
+                          <thead>
+                            <tr>
+                              <th>Parameter</th>
+                              <th>Value</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for key, value in result.detail.parameters.items %}
+                            <tr>
+                              <td>{{ key }}</td>
+                              <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="bi bi-clipboard-x" style="font-size: 2rem; color: #ddd;"></i>
+          <p class="text-muted mt-2">No test results available for this sample yet</p>
+          <a href="{% url 'kebs:add_test_result' sample.sample_id %}" class="btn btn-primary mt-2">
+            <i class="bi bi-clipboard-plus"></i> Add Test Result
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- Label Information -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Certification Label</h5>
+        
+        {% if label %}
+        <div class="text-center mb-4">
+          {% if label.qr_code %}
+          <div class="qr-code-container">
+            <img src="{{ label.qr_code.url }}" alt="QR Code" class="qr-code-image"/>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="detail-item">
+          <div class="detail-label">Certification Number</div>
+          <div>{{ label.certification_number }}</div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="detail-label">Generated Date</div>
+          <div>{{ label.generated_date|date:"M d, Y" }}</div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="detail-label">Expiry Date</div>
+          <div>{{ label.expiry_date|date:"M d, Y" }}</div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="detail-label">Generated By</div>
+          <div>{{ label.generated_by.get_full_name|default:label.generated_by.username }}</div>
+        </div>
+        
+        <a href="{% url 'kebs:download_label' label.id %}" class="btn btn-primary w-100 mt-3" target="_blank">
+          <i class="bi bi-download"></i> Download Certificate
+        </a>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="bi bi-tag" style="font-size: 2rem; color: #ddd;"></i>
+          <p class="text-muted mt-2">No certification label generated yet</p>
+          
+          {% if sample.testing_status == 'Completed' %}
+          <button class="btn btn-info mt-2 generate-label-btn" data-batch="{{ sample.batch_number }}" type="button" data-bs-toggle="modal" data-bs-target="#labelModal">
+            <i class="bi bi-tag"></i> Generate Label
+          </button>
+          {% else %}
+          <p class="text-muted small">
+            <i class="bi bi-info-circle"></i> 
+            Label can be generated only when the sample has a compliant test result
+          </p>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Label Generation Modal -->
+<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="labelModalLabel">Generate Label</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="label-message"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/label-generation.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Setup label generation buttons
+    const generateLabelBtns = document.querySelectorAll('.generate-label-btn');
+    
+    generateLabelBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const batchNumber = this.getAttribute('data-batch');
+        const messageContainer = document.getElementById('label-message');
+        
+        // Show loading message
+        displayMessage('label-message', '<i class="bi bi-hourglass-split"></i> Generating label...', 'info');
+        
+        // Call the generate label function from label-generation.js
+        generateLabel(batchNumber)
+          .then(result => {
+            // Display success message with download link
+            messageContainer.innerHTML = result.message;
+          })
+          .catch(error => {
+            // Display error message
+            displayMessage('label-message', '<i class="bi bi-exclamation-triangle"></i> ' + error.message, 'error');
+          });
+      });
+    });
+  });
+</script>
+{% endblock %}

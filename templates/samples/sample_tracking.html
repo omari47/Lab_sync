@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Sample Tracking - KEBS MIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4"><i class="bi bi-search"></i> Track Sample</h2>
+
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <div class="input-group">
+                    <input type="text" id="searchQuery" class="form-control"
+                           placeholder="Enter Sample ID or Batch Number" aria-label="Search">
+                    <button type="button" id="searchButton" class="btn btn-primary"><i class="bi bi-search"></i>
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sample Tracking Table -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="sampleTable">
+                    <thead>
+                    <tr>
+                        <th>Sample ID</th>
+                        <th>Sample Type</th>
+                        <th>Batch Number</th>
+                        <th>Testing Status</th>
+                        <th>Test Date</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Data will be populated dynamically via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchButton = document.getElementById('searchButton');
+        const searchQuery = document.getElementById('searchQuery');
+        const sampleTableBody = document.querySelector('#sampleTable tbody');
+
+        // Function to fetch and display data
+        function fetchData(query = '') {
+            fetch(`/sample-mis/api/samples/?q=${query}`)  // API endpoint
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing table rows
+                    sampleTableBody.innerHTML = '';
+
+                    // Populate table with new data
+                    if (data.samples && data.samples.length > 0) {
+                        data.samples.forEach(sample => {
+                            const row = document.createElement('tr');
+                            
+                            // Convert status to Bootstrap badge class
+                            let statusClass = 'badge-secondary';
+                            if (sample.status === 'In Progress') statusClass = 'badge-in-progress';
+                            else if (sample.status === 'Completed') statusClass = 'badge-completed';
+                            else if (sample.status === 'Pending') statusClass = 'badge-pending';
+                            
+                            row.innerHTML = `
+                                <td>${sample.id}</td>
+                                <td>${sample.type}</td>
+                                <td>${sample.batch_number}</td>
+                                <td><span class="badge ${statusClass}">${sample.status}</span></td>
+                                <td>${sample.date}</td>
+                                <td>
+                                    <a href="/sample-mis/samples/${sample.id}/" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </a>
+                                </td>
+                            `;
+                            sampleTableBody.appendChild(row);
+                        });
+                    } else {
+                        // No samples found
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="6" class="text-center">No samples found</td>';
+                        sampleTableBody.appendChild(row);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    // Show error message
+                    sampleTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+                });
+        }
+
+        // Fetch data on page load
+        fetchData();
+
+        // Fetch data on search button click
+        searchButton.addEventListener('click', () => {
+            fetchData(searchQuery.value);
+        });
+
+        // Fetch data on Enter key press in search bar
+        searchQuery.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchData(searchQuery.value);
+            }
+        });
+    });
+</script>
+{% endblock %}
