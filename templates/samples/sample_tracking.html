@@ -1,7 +1,13 @@
 {% extends 'base.html' %}
 
 {% block title %}Sample Tracking - KEBS MIS{% endblock %}
+{% block page_title %}Sample Tracking{% endblock %}
 
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Sample Track</li>
+{% endblock %}
 {% block content %}
 <div class="container">
     <div class="card">
@@ -49,7 +55,7 @@
 
         // Function to fetch and display data
         function fetchData(query = '') {
-            fetch(`/sample-mis/api/samples/?q=${query}`)  // API endpoint
+            fetch(`/kebs/api/samples/?q=${query}`)  // API endpoint
                 .then(response => response.json())
                 .then(data => {
                     // Clear existing table rows
@@ -73,7 +79,7 @@
                                 <td><span class="badge ${statusClass}">${sample.status}</span></td>
                                 <td>${sample.date}</td>
                                 <td>
-                                    <a href="/sample-mis/samples/${sample.id}/" class="btn btn-sm btn-primary">
+                                    <a href="/kebs/samples/${sample.id}/" class="btn btn-sm btn-primary">
                                         <i class="bi bi-eye"></i> View Details
                                     </a>
                                 </td>

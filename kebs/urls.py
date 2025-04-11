@@ -1,10 +1,13 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
 
-# Create a router for RESTful API endpoints
-router = DefaultRouter()
 app_name = 'kebs'
+
+# If you plan to add viewsets later, configure your DefaultRouter.
+router = DefaultRouter()
+# Example: router.register(r'samples', views.SampleViewSet)  # Uncomment and define viewset if needed
+
 urlpatterns = [
     # Dashboard and main views
     path('', views.dashboard, name='dashboard'),
@@ -12,8 +15,7 @@ urlpatterns = [
     path('samples/create/', views.create_sample, name='create_sample'),
     path('samples/<int:sample_id>/', views.sample_detail, name='sample_detail'),
     path('samples/<int:sample_id>/add-test-result/', views.add_test_result, name='add_test_result'),
-    path('samples/<int:sample_id>/add-test-result-crispy/', views.add_test_result_crispy,
-         name='add_test_result_crispy'),
+    path('samples/<int:sample_id>/add-test-result-crispy/', views.add_test_result_crispy, name='add_test_result_crispy'),
 
     # Data management and tracking
     path('data-management/', views.data_management, name='data_management'),
@@ -23,14 +25,18 @@ urlpatterns = [
 
     # Label generation and download
     path('generate-label/', views.generate_label, name='generate_label'),
+    
     path('generate-label-page/', views.generate_label_page, name='generate_label_page'),
     path('labels/<int:label_id>/download/', views.download_label, name='download_label'),
     path('test-results-pdf/<int:sample_id>/', views.view_test_results_pdf, name='view_test_results_pdf'),
 
     # API endpoints
+    path('api/samples/', views.api_samples, name='api_samples'),
+
     path('api/samples/', views.api_sample_list, name='api_sample_list'),
     path('api/samples/generate-label/', views.api_generate_label, name='api_generate_label'),
+    
+    # Include the router URLs if any are registered
+    path('api/', include(router.urls)),
 ]
 
-# Add the router URLs
-urlpatterns += router.urls
