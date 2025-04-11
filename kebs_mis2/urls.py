@@ -26,6 +26,7 @@ from kebs.views import login_view, logout_view, register_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='kebs:dashboard')),
+    
     path('kebs/', include(('kebs.urls', 'kebs'), namespace='kebs')),
 
     # Authentication URLs

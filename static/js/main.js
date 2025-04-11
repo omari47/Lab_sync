@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {string} query - Search query
  */
 function fetchSampleData(query) {
-  const url = `/sample-mis/api/samples/?q=${query}`;
+  const url = `/kebs/api/samples/?q=${query}`;
 
   return fetch(url)
     .then(response => response.json())
@@ -53,7 +53,7 @@ function displaySampleResults(samples, container) {
       : '';
 
     html += `
-      <a href="/sample-mis/samples/${sample.id}/" class="list-group-item list-group-item-action">
+      <a href="/kebs/samples/${sample.id}/" class="list-group-item list-group-item-action">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-0">${sample.batch_number}</h6>
           <span class="badge ${statusClass}">${sample.status}</span>
@@ -74,26 +74,89 @@ function displaySampleResults(samples, container) {
  * Generate label for a batch
  * @param {string} batchNumber - Batch number
  */
+// function generateLabel(batchNumber) {
+//   const url = "/kebs/generate-label/";
+//   const messageContainer = document.getElementById('label-message');
+
+//   // Show loading message
+//   messageContainer.innerHTML = '<div class="alert alert-info">Generating label...</div>';
+
+//   fetch(url, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'X-CSRFToken': getCookie('csrftoken')
+//     },
+//     body: JSON.stringify({ batch_number: batchNumber })
+//   })
+//   .then(response => response.json())
+//   .then(data => {
+//     if (data.status === 'success') {
+//       messageContainer.innerHTML = `
+//         <div class="alert alert-success">${data.message}</div>
+//         <div class="card">
+//           <div class="card-body">
+//             <h5 class="card-title">Label Information</h5>
+//             <div class="detail-item">
+//               <div class="detail-label">Certification Number</div>
+//               <div>${data.certification_number}</div>
+//             </div>
+//             <div class="detail-item">
+//               <div class="detail-label">Generated Date</div>
+//               <div>${data.generated_date}</div>
+//             </div>
+//             <div class="detail-item">
+//               <div class="detail-label">Expiry Date</div>
+//               <div>${data.expiry_date}</div>
+//             </div>
+//             <div class="mt-3">
+//               <a href="/kebs/labels/${data.label_id}/download/" class="btn btn-primary" target="_blank">
+//                 <i class="bi bi-download"></i> Download Certificate
+//               </a>
+//             </div>
+//           </div>
+//         </div>
+//       `;
+//     } else {
+//       messageContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+//     }
+//   })
+//   .catch(error => {
+//     console.error('Error generating label:', error);
+//     messageContainer.innerHTML = '<div class="alert alert-danger">Error generating label. Please try again.</div>';
+//   });
+// }
 function generateLabel(batchNumber) {
-  const url = "/sample-mis/generate-label/";
+  // Build the API URL with the GET parameter "query"
+  const url = `/kebs/api/samples/generate-label/?query=${encodeURIComponent(batchNumber)}`;
   const messageContainer = document.getElementById('label-message');
 
   // Show loading message
   messageContainer.innerHTML = '<div class="alert alert-info">Generating label...</div>';
 
+  // Make GET request
   fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken')
-    },
-    body: JSON.stringify({ batch_number: batchNumber })
+    credentials: 'same-origin' // ensure cookies are sent if needed
   })
-  .then(response => response.json())
+  .then(response => {
+    // If redirected to login page, handle it
+    if (response.redirected && response.url.includes('login')) {
+      window.location.href = response.url;
+      throw new Error('Authentication required');
+    }
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'Error generating label');
+      });
+    }
+    return response.json();
+  })
   .then(data => {
-    if (data.status === 'success') {
+    // Check that the response contains a valid label_id
+    if (data.label_id) {
+      // Optionally, you can add a "status" property in your API response
       messageContainer.innerHTML = `
-        <div class="alert alert-success">${data.message}</div>
+        <div class="alert alert-success">Label generated successfully.</div>
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Label Information</h5>
@@ -110,7 +173,7 @@ function generateLabel(batchNumber) {
               <div>${data.expiry_date}</div>
             </div>
             <div class="mt-3">
-              <a href="/sample-mis/labels/${data.label_id}/download/" class="btn btn-primary" target="_blank">
+              <a href="/kebs/labels/${data.label_id}/download/" class="btn btn-primary" target="_blank">
                 <i class="bi bi-download"></i> Download Certificate
               </a>
             </div>
@@ -118,12 +181,12 @@ function generateLabel(batchNumber) {
         </div>
       `;
     } else {
-      messageContainer.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+      throw new Error('Label generation failed: Missing label ID.');
     }
   })
   .catch(error => {
     console.error('Error generating label:', error);
-    messageContainer.innerHTML = '<div class="alert alert-danger">Error generating label. Please try again.</div>';
+    messageContainer.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
   });
 }
 

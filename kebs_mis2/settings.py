@@ -143,7 +143,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Login/Logout URLs
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/sample-mis/'
+LOGIN_REDIRECT_URL = '/kebs/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # REST Framework settings

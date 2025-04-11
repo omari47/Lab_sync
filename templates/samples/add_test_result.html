@@ -2,14 +2,27 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}Add Test Result - {{ sample.batch_number }} - KEBS MIS{% endblock %}
-{% block page_title %}Add Test Result for Sample: {{ sample.batch_number }}{% endblock %}
+{% block title %}Add Test Result - 
+
+{{ sample.batch_number }} - 
+
+KEBS MIS{% endblock %}
+
+{% block page_title %}
+
+Add Test Result for Sample: 
+
+{{ sample.batch_number }}
+
+{% endblock %}
 
 {% block breadcrumbs %}
+
 <li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'kebs:sample_list' %}">Samples</a></li>
 <li class="breadcrumb-item"><a href="{% url 'kebs:sample_detail' sample.sample_id %}">{{ sample.batch_number }}</a></li>
 <li class="breadcrumb-item active">Add Test Result</li>
+
 {% endblock %}
 
 {% block content %}

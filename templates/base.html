@@ -635,7 +635,7 @@
       <ul class="d-flex align-items-center">
         <li class="nav-item dropdown pe-3">
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <img src="{% static 'assets/img/profile-img.jpg' %}" alt="Profile" class="rounded-circle">
+            <!-- <img src="{% static 'assets/img/profile-img.jpg' %}" alt="Profile" class="rounded-circle"> -->
             <span class="d-none d-md-block dropdown-toggle ps-2">{{ request.user.username|default:"User" }}</span>
           </a>
 
@@ -857,7 +857,7 @@
      * @param {string} query - Search query
      */
     function fetchSampleData(query) {
-      const url = `/sample-mis/api/samples/?q=${query}`;
+      const url = `/kebs/api/samples/?q=${query}`;
       
       return fetch(url)
         .then(response => response.json())
@@ -907,7 +907,7 @@
                   <div>${data.expiry_date}</div>
                 </div>
                 <div class="mt-3">
-                  <a href="/sample-mis/labels/${data.label_id}/download/" class="btn btn-primary" target="_blank">
+                  <a href="/kebs/labels/${data.label_id}/download/" class="btn btn-primary" target="_blank">
                     <i class="bi bi-download"></i> Download Certificate
                   </a>
                 </div>

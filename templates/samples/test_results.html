@@ -1,6 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Testing Results - KEBS MIS{% endblock %}
+{% block title %}
+
+Testing Results - KEBS MIS
+
+{% endblock %}
+{% block page_title %}Test Results{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'kebs:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Results</li>
+{% endblock %}
 
 {% block content %}
 <div class="container">

@@ -18,7 +18,7 @@ function generateLabel(batchNumber) {
         const csrftoken = getCookie('csrftoken');
 
         // Make POST request to generate label
-        fetch('/sample-mis/generate-label/', {
+        fetch('/kebs/generate-label/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ function generateLabel(batchNumber) {
                     <div class="alert alert-success">
                         <h5><i class="bi bi-check-circle"></i> Label Generated Successfully</h5>
                         <p>Certification Number: <strong>${data.certification_number}</strong></p>
-                        <a href="/sample-mis/labels/${data.label_id}/download/" class="btn btn-primary mt-2" target="_blank">
+                        <a href="/kebs/labels/${data.label_id}/download/" class="btn btn-primary mt-2" target="_blank">
                             <i class="bi bi-download"></i> Download Label
                         </a>
                     </div>

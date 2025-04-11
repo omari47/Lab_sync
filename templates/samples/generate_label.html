@@ -75,9 +75,13 @@
                 <div class="col-md-4 text-center">
                   <div id="qrCodePreview" class="mb-3"></div>
                   <div class="d-grid gap-2">
-                    <a id="downloadBtn" class="btn btn-success" target="_blank">
+
+                    <!-- to add link to download the pdf -->
+                    <a href="#" id="downloadBtn" class="btn btn-success" target="_blank">  
                       <i class="bi bi-download"></i> Download PDF
                     </a>
+                    
+                    <!-- to add link to view sample details -->
                     <a href="#" id="viewDetailsBtn" class="btn btn-outline-success">
                       <i class="bi bi-eye"></i> View Sample Details
                     </a>
@@ -134,8 +138,8 @@
             document.getElementById('certNumber').textContent = data.certification_number || '';
             
             // Update download and view buttons
-            document.getElementById('downloadBtn').href = `/sample-mis/labels/${data.label_id}/download/`;
-            document.getElementById('viewDetailsBtn').href = `/sample-mis/sample/${data.sample_id}/`;
+            document.getElementById('downloadBtn').href = `/kebs/labels/${data.label_id}/download/`;
+            document.getElementById('viewDetailsBtn').href = `/kebs/samples/${data.sample_id}/`;
             
             // Display QR code if available
             if (data.qr_code_url) {
@@ -194,4 +198,5 @@
     }
   }
 </style>
+
 {% endblock %}
